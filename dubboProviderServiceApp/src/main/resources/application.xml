@@ -14,10 +14,10 @@
 	default-lazy-init="true">
 	
 	<description>dubbo提供者服务配置</description>
-	<dubbo:application name="dubboPrivoderServiceApp" owner="allen" /> 
+	<dubbo:application name="dubboProviderServiceApp" owner="allen" /> 
     <dubbo:consumer timeout="3000"/>
     <dubbo:registry  protocol="zookeeper" address="127.0.0.1:2182" />
-    <dubbo:protocol name="dubbo" port="20880" />
+    <dubbo:protocol name="dubbo" port="20881" />
     
     <bean id="dubboTestService" class="com.allen.dubbo.service.impl.DubboTestServiceImpl"></bean>
       

@@ -12,9 +12,11 @@ public class StartUp {
 		//启动服务
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:application.xml");
 		context.start();
+		System.out.println("service startup successs ……");
+		logger.info("dubboProviderServiceApp start success !!!");
+		
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){
-
 			@Override
 			public void run() {
 				if(context != null){
@@ -31,7 +33,6 @@ public class StartUp {
 			
 		});
 			
-		
 		synchronized (StartUp.class) {
 			try {
 				StartUp.class.wait();
@@ -39,12 +40,7 @@ public class StartUp {
 				e.printStackTrace();
 			}
 		}
-		
-		logger.info("dubboProviderServiceApp start success !!!");
-		System.out.println("service startup successs ……");
-		
 		//while(true);
-		
 		
 	}
 
