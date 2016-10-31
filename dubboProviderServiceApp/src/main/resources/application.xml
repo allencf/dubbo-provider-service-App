@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.1.xsd
+	http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd" 
+	default-lazy-init="true">
+	
+	<description>dubbo提供者服务配置</description>
+	<dubbo:application name="dubboPrivoderServiceApp" owner="allen" /> 
+    <dubbo:consumer timeout="3000"/>
+    <dubbo:registry  protocol="zookeeper" address="127.0.0.1:2182" />
+    <dubbo:protocol name="dubbo" port="20880" />
+    
+    <bean id="dubboTestService" class="com.allen.dubbo.service.impl.DubboTestServiceImpl"></bean>
+      
+	<dubbo:service ref="dubboTestService" interface="com.allen.dubbo.service.DubboTestService"></dubbo:service>
+    
+   
+</beans>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context" 
+    xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd"
+	default-lazy-init="true">
+
+	<description>Spring Configuration</description>
+	
+	<!-- 加载zk和zk之外的配置，优先级最高 -->
+	<bean id="zkSourceConfigurer" class="com.ddkl.common.configuration.ZookeeperSourcesPlaceholderConfigurer">
+		<property name="ignoreUnresolvablePlaceholders" value="true" />
+		<property name="order" value="1"/>
+		<property name="propertySources">
+			<bean class="com.ddkl.common.configuration.ZookeeperSourceFactory" factory-method="create">
+				<constructor-arg name="locations">
+					<list>
+						<value>classpath:/application.properties</value>
+						<!-- 开发环境配置 -->
+						<value>file:c:/application.properties</value>
+					 
+						<value>file:/app/ddkl/config/application.properties</value>
+					</list>
+				</constructor-arg>
+			</bean>
+	    </property>
+	</bean>
+	
+	<!-- Curator的FactoryBean，Spring启动时创建Curator实例。 -->
+	<bean id="zookeeperFactoryBean" class="com.ddkl.common.configuration.listener.ZookeeperFactoryBean" lazy-init="false">
+	    <property name="zkConnectionString" value="${zk.addr}"/>
+	    <!-- 设置zookeeper的事件监听者，本例是一个logback日志级别znode监听器 -->
+	    <property name="listeners">
+	        <list>
+	            <bean class="com.ddkl.common.configuration.listener.LogbackLevelListener">
+	                <constructor-arg name="zkSourceConfigurer" ref="zkSourceConfigurer"/>
+	                <constructor-arg name="loggerNames" value="com.ddkl"/>
+	                <constructor-arg name="zkNodeName" value="ddkl.logbacklevel"/>
+	            </bean>
+	        </list>
+	    </property>
+	</bean>
+
+	<!-- 日志设置 -->
+	<bean class="com.ddkl.common.logback.spring.ApplicationContextHolder"/>
+	<bean id="logstashAppender" class="com.ddkl.common.logback.appender.RedisAppender" init-method="start" destroy-method="stop">
+        <property name="context" value="#{ T(org.slf4j.LoggerFactory).getILoggerFactory() }"/>
+        <property name="source" value="${app.name}"/>
+        <property name="sourcePath" value="${app.name}"/>
+        <property name="type" value="logback"/>
+        <property name="tags" value="${app.name}"/>
+        <property name="host" value="${elk.redis.host}"/>
+        <property name="port" value="${elk.redis.port}"/>
+        <property name="key" value="logstash"/>
+    </bean>
+	
+	<!-- 使用Annotation自动注册Bean，解决事物失效问题：在主容器中不扫描@Controller注解，在SpringMvc中只扫描@Controller注解。  -->
+	<context:component-scan base-package="com.ddkl"><!-- base-package 如果多个，用“,”分隔 -->
+	</context:component-scan>
+	
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">  
+        <property name="basenames">  
+            <list>  
+				<value>com.ddkl.operation.error_zh_CN</value>
+				<value>com.ddkl.operation.consume_exchange_detail</value>
+				<value>com.ddkl.operation.consume_exchange</value>
+            </list>  
+        </property>  
+    </bean>
+	
+	<bean class="com.ddkl.common.springutils.Springs" lazy-init="false"></bean>
+	
+	<bean id="exceptionHandler" class="com.ddkl.common.exception.SimpleExceptionHandler">
+	</bean>
+
+	<!-- 事务管理器配置,单数据源事务 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	 
+	<!-- 定义事务 -->
+	<tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="delete*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="create*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="update*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="save*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="import*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="move*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="do*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="find*" propagation="SUPPORTS" />
+			<tx:method name="export*" propagation="SUPPORTS"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- 拦截器方式配置事务 -->
+	<aop:config>    
+    	<aop:pointcut id="transactionPointcut" expression="execution(public * com.ddkl.**.service.*.*(..))" /> <!--把事务控制在Service层-->
+    	<aop:advisor pointcut-ref="transactionPointcut" advice-ref="transactionAdvice" />
+  	</aop:config>
+	
+	<bean id="passwordCallback" class="com.ddkl.common.jdbc.util.JdbcPasswordCallback">
+		<property name="password" value="${ddkl.operation.jdbc.password}" />
+	</bean>
+
+	<!-- 数据源配置, 使用 BoneCP 数据库连接池 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close"> 
+	    <!-- 数据源驱动类可不写，Druid默认会自动根据URL识别DriverClass -->
+	    <property name="driverClassName" value="${ddkl.operation.jdbc.driver}" />
+	    
+		<!-- 基本属性 url、user、password -->
+		<property name="url" value="${ddkl.operation.jdbc.url}" />
+		<property name="username" value="${ddkl.operation.jdbc.username}" />
+		<!-- <property name="password" value="${ddkl.product.jdbc.password}" /> -->
+		
+		<!-- 配置初始化大小、最小、最大 -->
+		<property name="initialSize" value="${ddkl.operation.jdbc.pool.initialSize}" />
+		<property name="minIdle" value="${ddkl.operation.jdbc.pool.minIdle}" /> 
+		<property name="maxActive" value="${ddkl.operation.jdbc.pool.maxActive}" />
+		
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="60000" />
+		
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="300000" />
+		
+		<property name="defaultAutoCommit" value="false" />
+		
+		<property name="validationQuery" value="SELECT 'x' from dual" />
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="false" />
+		<property name="testOnReturn" value="false" />
+		
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小（Oracle使用）-->
+		<property name="poolPreparedStatements" value="true" />
+		<property name="maxPoolPreparedStatementPerConnectionSize" value="${ddkl.operation.jdbc.pool.maxPSCacheSize}" />
+		
+		<!-- 配置监控统计拦截的filters -->
+	    <property name="filters" value="stat" /> 
+	    
+	    <property name="passwordCallback" ref="passwordCallback"/>
+	</bean>
+	
+	<!-- MyBatis配置 -->
+	<bean id="sqlSessionFactory"
+		class="com.ddkl.common.mybatis.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:mybatis-config-mysql.xml" />
+		<!--  需要从jar中加载GlobalMapper.xml -->
+		<property name="mapperLocations">
+            <list>
+                <value>classpath*:/com/ddkl/operation/**/mysql/*Mapper.xml</value>
+                <value>classpath*:/com/ddkl/common/dao/GlobalMapper.xml</value>
+            </list>
+       	</property>
+	</bean>
+</beans>

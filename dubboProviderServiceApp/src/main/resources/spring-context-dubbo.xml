@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ - Copyright 1999-2011 Alibaba Group.
+ -  
+ - Licensed under the Apache License, Version 2.0 (the "License");
+ - you may not use this file except in compliance with the License.
+ - You may obtain a copy of the License at
+ -  
+ -      http://www.apache.org/licenses/LICENSE-2.0
+ -  
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the License is distributed on an "AS IS" BASIS,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the License for the specific language governing permissions and
+ - limitations under the License.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+ 
+    <description>operation模块Dubbo服务配置 </description>
+    <dubbo:application name="${app.name}" owner="${app.owner}" organization="${app.org}" logger="slf4j"/> 
+    <dubbo:provider filter="DDKLExceptionFilter,InvocationRpcFilter"></dubbo:provider>
+    <dubbo:consumer timeout="3000"/>
+    <dubbo:registry  protocol="zookeeper" address="${zk.addr}" client="curator"/>
+    <dubbo:protocol name="dubbo" port="${app.port}" register="${service.register}"/>  
+    <dubbo:monitor protocol="registry"/>
+ 
+	<!-- ==========================================================================-->
+	<!--=============================== Dubbo服务提供 ===============================-->
+	<!-- ==========================================================================-->
+	<!-- 导购签到记录服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.SalerSignService" ref="salerSignServiceImpl" version="1.0.0" />
+	<!-- 导购积分服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.SalerScoreService" ref="salerScoreServiceImpl" version="1.0.0" />
+	<!-- 积分兑换红包服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.SalerScoreExchangeService" ref="salerScoreExchangeServiceImpl" version="1.0.0" />
+	<!-- 小票兑换服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.ConsumeExchangeService" ref="consumeExchangeServiceImpl" version="1.0.0" />
+	<!-- 小票兑换详情服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.ConsumeExchangeDetailService" ref="consumeExchangeDetailServiceImpl" version="1.0.0" />
+	<!-- 活动服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.AtyActivityService" ref="atyActivityServiceImpl" version="1.0.0" />
+	<!-- 抽奖活动日志服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.AtyLotteryLogService" ref="atyLotteryLogServiceImpl" version="1.0.0" />
+	<!-- 抽奖活动抽奖机会服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.AtyLotteryChanceService" ref="atyLotteryChanceServiceImpl" version="1.0.0" />
+	<!-- 抽奖活动奖品服务 -->
+	<dubbo:service interface="com.ddkl.operation.service.AtyLotteryPrizeService" ref="atyLotteryPrizeServiceImpl" version="1.0.0" />
+	
+	<dubbo:service interface="com.ddkl.operation.service.SalerScoreCardService" ref="salerScoreCardServiceImpl" version="1.0.0" /> 
+	<!-- 钱包服务 -->
+	<dubbo:service interface="com.ddkl.mall.ewallet.service.EwalletService" ref="ewalletServiceImpl" version="1.0.0" />
+	
+	<!-- ==========================================================================-->
+	<!--=============================== Dubbo服务消费 ===============================-->
+	<!-- ==========================================================================-->
+    <!-- 经销商用户和店员服务  -->
+	<dubbo:reference id="dealerUserService" interface="com.ddkl.dealer.service.DealerUserService" version="1.0.0" check="false"></dubbo:reference>
+	<!-- 门店服务  -->
+	<dubbo:reference id="StoreService" interface="com.ddkl.dealer.service.StoreService" version="1.0.0" check="false"></dubbo:reference>
+    <!-- 账户服务 -->
+    <dubbo:reference id="userAccountService" interface="com.ddkl.account.service.UserAccountService" version="1.0.0" check="false"></dubbo:reference>
+    <!-- im服务 -->
+    <dubbo:reference id="imService" interface="com.ddkl.im.service.IMService" version="1.0.0" check="false">
+    	<dubbo:method name="sendIMSystemTxtMsg" timeout="600000"/>
+        <dubbo:method name="sendIMPromptTxtMsg" timeout="2000000"/>
+    </dubbo:reference>
+    <!-- 客户关系管理模块 --> <!-- url="10.0.1.186:20986"  -->
+	<dubbo:reference id="custRelationsService" interface="com.ddkl.crm.service.CustRelationsService" version="1.0.0" check="false"  />
+
+	<dubbo:reference id="crmCustomerService" interface="com.ddkl.crm.service.CrmCustomerService" version="1.0.0" check="false"  />
+	<!-- 微信红包服务 -->
+    <dubbo:reference interface="com.ddkl.weixin.gateway.api.service.WxRedPacketService" id="wxRedPacketService" version="1.0.0" check="false">
+    	<dubbo:method name="sendWxRedPacket" retries="0" timeout="60000"/>
+    </dubbo:reference>
+    <!-- 微信服务依赖 -->
+    <dubbo:reference id="wxApiUserService" interface="com.ddkl.weixin.gateway.api.service.WxAPIUserService" version="1.0.0" check="false"></dubbo:reference>
+    <dubbo:reference id="wxPublicNumberService" interface="com.ddkl.weixin.gateway.base.service.WxPublicNumberService" version="1.0.0" check="false"></dubbo:reference>
+    <!-- 基础数据分类服务依赖 -->
+    <dubbo:reference id="categoryService" interface="com.ddkl.basedata.service.CategoryService" version="1.2.0" check="false"></dubbo:reference>
+     <!-- 短信服务 -->
+    <dubbo:reference id="messageService" interface="com.ddkl.message.service.MessageService" version="1.0.0"  check="false"></dubbo:reference>
+    
+    <!-- 地区服务 -->
+    <dubbo:reference id="ddklAreaService" interface="com.ddkl.basedata.service.AreaService" version="1.0.0"></dubbo:reference>
+    
+</beans>
