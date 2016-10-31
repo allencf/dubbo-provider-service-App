@@ -19,9 +19,12 @@
     <dubbo:registry  protocol="zookeeper" address="127.0.0.1:2182" />
     <dubbo:protocol name="dubbo" port="20881" />
     
-    <bean id="dubboTestService" class="com.allen.dubbo.service.impl.DubboTestServiceImpl"></bean>
+    <!-- 使用Annotation自动注册bean -->
+    <context:component-scan base-package="com.allen.dubbo"></context:component-scan>
+    
+    <!-- <bean id="dubboTestService" class="com.allen.dubbo.service.impl.DubboTestServiceImpl"></bean> -->
       
-	<dubbo:service ref="dubboTestService" interface="com.allen.dubbo.service.DubboTestService"></dubbo:service>
+	<dubbo:service ref="dubboTestServiceImpl" interface="com.allen.dubbo.service.DubboTestService"></dubbo:service>
     
    
 </beans>
