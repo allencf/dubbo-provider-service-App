@@ -32,11 +32,10 @@
 	
 	<!-- 连接zookeeper的客户端 -->
 	<dependency>
-	<groupId>com.github.sgroschupf</groupId>
-	<artifactId>zkclient</artifactId>
-	<version>0.1</version>
+	    <groupId>com.github.sgroschupf</groupId>
+	    <artifactId>zkclient</artifactId>
+	    <version>0.1</version>
 	</dependency>
-  	
   	
   	<!-- zookeeper依赖 -->
   	<dependency>
