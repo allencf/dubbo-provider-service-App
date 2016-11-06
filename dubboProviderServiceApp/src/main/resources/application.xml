@@ -10,8 +10,7 @@
 	http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
 	http://www.springframework.org/schema/context
 	http://www.springframework.org/schema/context/spring-context-3.1.xsd
-	http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd" 
-	default-lazy-init="true">
+	http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
 	
 	<description>dubbo提供者服务配置</description>
 	<dubbo:application name="dubboProviderServiceApp" owner="allen" /> 
@@ -20,11 +19,12 @@
     <dubbo:protocol name="dubbo" port="20881" />
     
     <!-- 使用Annotation自动注册bean -->
-    <context:component-scan base-package="com.allen.dubbo"></context:component-scan>
+    <context:component-scan base-package="com.allen.dubbo" />
+	<dubbo:service ref="dubboTestServiceImpl" interface="com.allen.dubbo.service.DubboTestService" />
     
-    <!-- <bean id="dubboTestService" class="com.allen.dubbo.service.impl.DubboTestServiceImpl"></bean> -->
+    <!-- 通过dubbo注解方式注册服务 -->
+   <!--  <dubbo:annotation package="com.allen.dubbo" /> -->
       
-	<dubbo:service ref="dubboTestServiceImpl" interface="com.allen.dubbo.service.DubboTestService"></dubbo:service>
     
    
 </beans>
