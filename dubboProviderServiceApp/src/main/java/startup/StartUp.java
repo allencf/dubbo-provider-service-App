@@ -8,13 +8,12 @@ public class StartUp {
 	
 	private final static Logger logger = LoggerFactory.getLogger(StartUp.class);
 	
-	public static void main(String[] args) {
+	public static void start(){
 		//启动服务
 		final ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:application.xml");
 		context.start();
 		System.out.println("service startup successs ……");
 		logger.info("dubboProviderServiceApp start success !!!");
-		
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			@Override
@@ -24,13 +23,10 @@ public class StartUp {
 					context.close();
 					logger.info("dubboProviderServiceApp is stop !!!");
 				}
-				
 				synchronized (StartUp.class) {
 					StartUp.class.notify();
-					
 				}
 			}
-			
 		});
 			
 		synchronized (StartUp.class) {
@@ -41,7 +37,11 @@ public class StartUp {
 			}
 		}
 		//while(true);
-		
+	}
+	
+	
+	public static void main(String[] args) {
+		start();
 	}
 
 }
