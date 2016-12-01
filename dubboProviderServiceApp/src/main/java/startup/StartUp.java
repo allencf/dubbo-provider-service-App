@@ -10,7 +10,7 @@ public class StartUp {
 	
 	public static void start(){
 		//启动服务
-		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:application.xml");
+		final ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:application.xml");
 		context.start();
 		System.out.println("service startup successs ……");
 		logger.info("dubboProviderServiceApp start success !!!");
