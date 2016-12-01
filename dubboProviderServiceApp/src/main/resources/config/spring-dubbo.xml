@@ -18,9 +18,10 @@
     <dubbo:registry  protocol="zookeeper" address="${zookeeper.registry.address}" />
     <dubbo:protocol name="dubbo" port="${dubbo.port}" />
     
-	<!-- <dubbo:service ref="dubboTestServiceImpl" interface="com.allen.dubbo.service.DubboTestService" /> -->
-    
     <!-- 通过dubbo注解方式注册服务 -->
-    <dubbo:annotation package="com.allen.dubbo" />
+    <!-- <dubbo:annotation package="com.allen.dubbo" /> -->
+    
+    <!-- 通过xml配置方式注册服务 -->
+    <dubbo:service ref="dubboTestServiceImpl" interface="com.allen.dubbo.service.DubboTestService" />
       
 </beans>
